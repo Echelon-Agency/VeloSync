@@ -1,0 +1,6 @@
+{
+  "name": "VeloSync",
+  "description": "Premium Midnight Tech audio-task earning platform featuring secure tier subscription payments, focus-tracking audio player, and instant manual admin verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
