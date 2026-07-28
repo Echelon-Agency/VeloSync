@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldAlert, CheckCircle2, XCircle, Clock, RefreshCw, Sparkles, UserCheck } from 'lucide-react';
 import { motion } from 'motion/react';
+import { fireTierConfetti } from '../utils/confetti';
 
 interface AdminPanelProps {
   onStatusResolved: () => void;
@@ -42,7 +43,7 @@ export default function AdminPanel({ onStatusResolved }: AdminPanelProps) {
     fetchVerifications();
   }, []);
 
-  const handleResolve = async (id: string, status: 'approved' | 'rejected') => {
+  const handleResolve = async (id: string, status: 'approved' | 'rejected', tier?: string) => {
     setError('');
     setSuccess('');
     try {
@@ -54,6 +55,10 @@ export default function AdminPanel({ onStatusResolved }: AdminPanelProps) {
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || 'Resolution failed');
+
+      if (status === 'approved') {
+        fireTierConfetti(tier || 'gold');
+      }
 
       setSuccess(`Payment reference has been successfully ${status}!`);
       fetchVerifications();
@@ -142,14 +147,14 @@ export default function AdminPanel({ onStatusResolved }: AdminPanelProps) {
                   {pv.status === 'pending' ? (
                     <>
                       <button
-                        onClick={() => handleResolve(pv.id, 'rejected')}
+                        onClick={() => handleResolve(pv.id, 'rejected', pv.tier)}
                         className="px-3 py-2 text-xs border border-red-500/30 hover:bg-red-500/15 text-red-400 rounded-xl transition-all flex items-center gap-1 font-semibold"
                         id={`reject_btn_${pv.id}`}
                       >
                         <XCircle className="w-3.5 h-3.5" /> Reject
                       </button>
                       <button
-                        onClick={() => handleResolve(pv.id, 'approved')}
+                        onClick={() => handleResolve(pv.id, 'approved', pv.tier)}
                         className="px-3.5 py-2 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl transition-all flex items-center gap-1 font-bold"
                         id={`approve_btn_${pv.id}`}
                       >

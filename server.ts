@@ -492,15 +492,7 @@ app.post('/api/user/:id/withdraw', (req, res) => {
     return res.status(400).json({ error: `Insufficient balance. Current balance is ${user.balance} NGN.` });
   }
 
-  // Count valid referrals: users referred by this user's referral code who are tierActivated
-  const validReferrals = db.users.filter(u => u.referredBy === user.referralCode && u.tierActivated === true);
-  if (validReferrals.length < 1) {
-    return res.status(400).json({
-      error: 'Withdrawal locked. Under platform anti-fraud rules, you must have at least one (1) Valid Referral with an active paid subscription plan to enable withdrawals.',
-    });
-  }
-
-  // Process withdrawal
+  // Process withdrawal for credited welcome registration bonus and wallet balance
   user.balance -= amount;
 
   const tx: Transaction = {

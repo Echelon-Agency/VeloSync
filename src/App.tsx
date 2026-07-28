@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, ShieldCheck, LogOut, Coins, Lock, User, Copy, Check, 
   Clock, ArrowUpRight, Activity, Volume2, Award, Terminal, 
@@ -9,6 +9,8 @@ import Onboarding from './components/Onboarding';
 import AudioPlayer from './components/AudioPlayer';
 import WithdrawalModal from './components/WithdrawalModal';
 import AdminPanel from './components/AdminPanel';
+import CelebrationModal from './components/CelebrationModal';
+import { fireTierConfetti } from './utils/confetti';
 
 interface UserProfile {
   id: string;
@@ -58,6 +60,32 @@ export default function App() {
   const [bonusLoading, setBonusLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Celebration & Confetti state
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationTier, setCelebrationTier] = useState<string>('basic');
+  const prevUserTierRef = useRef<string | null>(null);
+  const prevTierActivatedRef = useRef<boolean | null>(null);
+
+  // Auto-trigger celebratory confetti when tier updates from 'none' (or inactive) to 'basic'/'premium'/'gold'
+  useEffect(() => {
+    if (user) {
+      const isNowActivated = user.tier !== 'none' && user.tierActivated;
+      const wasNotActivated = prevUserTierRef.current === 'none' || prevTierActivatedRef.current === false;
+
+      if (prevUserTierRef.current !== null && wasNotActivated && isNowActivated) {
+        setCelebrationTier(user.tier);
+        setShowCelebrationModal(true);
+        fireTierConfetti(user.tier);
+      }
+
+      prevUserTierRef.current = user.tier;
+      prevTierActivatedRef.current = user.tierActivated;
+    } else {
+      prevUserTierRef.current = null;
+      prevTierActivatedRef.current = null;
+    }
+  }, [user]);
 
   // Spin to Win states
   const [isSpinning, setIsSpinning] = useState(false);
@@ -382,8 +410,14 @@ export default function App() {
             {/* Visual shine inside wallet */}
             <div className="absolute top-[-50%] right-[-10%] w-[150px] h-[150px] bg-[#8A2BE2]/10 rounded-full blur-[40px] pointer-events-none"></div>
 
-            <div className="space-y-1">
-              <p className="text-xs text-gray-400 uppercase tracking-widest font-light">Available Naira Balance</p>
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-light">Available Naira Balance</p>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-yellow-400" />
+                  <span>Welcome Registration Bonus Credited & Withdrawable</span>
+                </span>
+              </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-purple-200 tracking-tight font-mono">
                   ₦{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -392,12 +426,29 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4 pt-6 mt-4 border-t border-gray-800/60">
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-6 mt-4 border-t border-gray-800/60">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#8A2BE2]" />
                 <span className="text-xs text-gray-400 font-light">
                   Status: <span className="font-bold text-white uppercase text-[10px]">{user.tierActivated ? `${user.tier} active` : 'unactivated'}</span>
                 </span>
+                
+                {user.tierActivated && (
+                  <button
+                    onClick={() => {
+                      const activeTier = user.tier !== 'none' ? user.tier : 'basic';
+                      setCelebrationTier(activeTier);
+                      setShowCelebrationModal(true);
+                      fireTierConfetti(activeTier);
+                    }}
+                    className="ml-1 px-2 py-0.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                    id="trigger_celebration_btn"
+                    title="Play Celebratory Tier Upgrade Particle Effect"
+                  >
+                    <Sparkles className="w-3 h-3 text-yellow-400" />
+                    <span>Celebrate Tier</span>
+                  </button>
+                )}
               </div>
 
               <button
@@ -882,6 +933,13 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      {/* 7. Celebratory Tier Upgrade Particle & Confetti Modal */}
+      <CelebrationModal
+        isOpen={showCelebrationModal}
+        tier={celebrationTier}
+        onClose={() => setShowCelebrationModal(false)}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Unlock, Landmark, CreditCard, User, HelpCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Lock, Unlock, Landmark, CreditCard, User, HelpCircle, AlertTriangle, ShieldCheck, Gift, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface WithdrawalModalProps {
@@ -17,7 +17,7 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const hasValidReferral = user.validReferralsCount && user.validReferralsCount >= 1;
+  const isBalanceAvailable = user.balance && user.balance > 0;
 
   const handleWithdrawalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,11 +37,6 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
 
     if (withdrawAmount > user.balance) {
       setError(`Insufficient balance. Your current balance is ₦${user.balance.toLocaleString()}.`);
-      return;
-    }
-
-    if (!hasValidReferral) {
-      setError('Withdrawal Forbidden: You do not meet the minimum requirement of at least 1 Valid Referral with an active subscription.');
       return;
     }
 
@@ -65,7 +60,7 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
         throw new Error(data.error || 'Withdrawal failed');
       }
 
-      setSuccess(`Success! ₦${withdrawAmount.toLocaleString()} withdrawal request submitted to your bank.`);
+      setSuccess(`Success! ₦${withdrawAmount.toLocaleString()} withdrawal request submitted for processing to ${bankName} (${accountNumber}).`);
       onWithdrawalComplete(data.balance);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
@@ -77,7 +72,7 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
   return (
     <div className="fixed inset-0 bg-[#0B0E14]/90 flex items-center justify-center p-4 z-50 overflow-y-auto" id="withdraw_overlay">
       <motion.div
-        className="bg-[#1A1F29] border border-gray-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-6"
+        className="bg-[#1A1F29] border border-gray-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-6 text-white"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 30 }}
@@ -87,9 +82,9 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
         <div className="flex justify-between items-start pb-4 border-b border-gray-800">
           <div className="space-y-1">
             <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-              ₦ Withdrawal Portal
+              ₦ Bank Withdrawal Portal
             </h3>
-            <p className="text-xs text-gray-400">Monthly Scheduled Settlement Gateway</p>
+            <p className="text-xs text-gray-400">Direct Local Bank Settlement Gateway</p>
           </div>
           <button
             onClick={onClose}
@@ -100,26 +95,18 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
           </button>
         </div>
 
-        {/* Anti-Fraud Referral Status */}
-        <div className={`border p-4 rounded-2xl flex items-start gap-4 transition-all ${
-          hasValidReferral 
-            ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-100'
-            : 'bg-yellow-950/20 border-yellow-500/30 text-yellow-100'
-        }`} id="referral_status_box">
-          <div className={`p-2 rounded-xl shrink-0 ${
-            hasValidReferral ? 'bg-emerald-950 text-emerald-400' : 'bg-yellow-950 text-yellow-400'
-          }`}>
-            {hasValidReferral ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+        {/* Welcome Registration Bonus & Wallet Status Card */}
+        <div className="bg-gradient-to-r from-emerald-950/40 via-purple-950/30 to-[#0B0E14] border border-emerald-500/30 p-4 rounded-2xl flex items-start gap-3 shadow-lg" id="welcome_bonus_status_box">
+          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl shrink-0">
+            <Gift className="w-5 h-5" />
           </div>
-          <div className="space-y-1 text-sm">
-            <h4 className="font-bold flex items-center gap-1.5 text-white">
-              {hasValidReferral ? 'Withdrawal Enabled' : 'Withdrawal Gate Locked'}
-            </h4>
-            <p className="text-xs text-gray-400 font-light leading-relaxed">
-              Your Valid Referrals: <span className="font-bold text-white">{user.validReferralsCount || 0}</span>.
-              {hasValidReferral 
-                ? ' You meet the anti-fraud requirement of at least 1 active paid referral! Payouts are fully unlocked.'
-                : ' Under platform anti-fraud mandates, you need at least 1 registered referral who successfully completes a paid subscription activation.'}
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-1.5 font-bold text-emerald-300">
+              <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+              <span>Welcome Registration Bonus Unlocked</span>
+            </div>
+            <p className="text-gray-300 font-light leading-relaxed">
+              Your credited <span className="font-bold text-white">₦500.00 Registration Bonus</span> and total wallet balance (<span className="font-bold text-emerald-300">₦{user.balance.toLocaleString()}</span>) are fully eligible for local bank settlement.
             </p>
           </div>
         </div>
@@ -141,14 +128,14 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" htmlFor="withdraw_bank_input">
-                Bank Name
+                Local Bank Name
               </label>
               <div className="relative">
                 <Landmark className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   id="withdraw_bank_input"
                   type="text"
-                  placeholder="e.g. Fairmoney Bank"
+                  placeholder="e.g. Fairmoney, GTBank"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   className="w-full pl-10 pr-3 py-3 bg-[#0B0E14] border border-gray-800 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[#8A2BE2] text-sm"
@@ -166,7 +153,7 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
                 <input
                   id="withdraw_account_number_input"
                   type="text"
-                  placeholder="10-digit Account No."
+                  placeholder="10-digit NUBAN"
                   maxLength={10}
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
@@ -197,15 +184,15 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
 
           <div>
             <label className="flex justify-between items-center text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" htmlFor="withdraw_amount_input">
-              <span>Amount (NGN)</span>
-              <span className="text-gray-500 lowercase">Wallet Balance: ₦{user.balance.toLocaleString()}</span>
+              <span>Withdrawal Amount (NGN)</span>
+              <span className="text-gray-400 font-mono lowercase">Balance: ₦{user.balance.toLocaleString()}</span>
             </label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">₦</span>
               <input
                 id="withdraw_amount_input"
                 type="number"
-                placeholder="e.g. 5000"
+                placeholder="e.g. 500"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 max={user.balance}
@@ -215,44 +202,45 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
               <button
                 type="button"
                 onClick={() => setAmount(user.balance.toString())}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#8A2BE2] hover:text-white uppercase"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#8A2BE2] hover:text-white uppercase px-2 py-1 bg-purple-950/40 rounded border border-purple-500/20"
               >
-                Max
+                Max Balance
               </button>
             </div>
           </div>
 
-          {/* Action button locked if referral is missing */}
+          {/* Action button */}
           <button
             id="withdraw_submit_btn"
             type="submit"
-            disabled={loading || !hasValidReferral}
+            disabled={loading || !isBalanceAvailable}
             className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-4 ${
-              hasValidReferral
+              isBalanceAvailable
                 ? 'bg-[#8A2BE2] hover:bg-[#7b24cc] shadow-[#8A2BE2]/20 active:scale-[0.98]'
                 : 'bg-gray-800 border border-gray-700 text-gray-500 cursor-not-allowed shadow-none'
             }`}
           >
             {loading ? (
               <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-            ) : hasValidReferral ? (
-              'Request Settlement Transfer'
+            ) : isBalanceAvailable ? (
+              'Request Local Bank Settlement'
             ) : (
-              'Withdrawal Locked'
+              'Zero Wallet Balance'
             )}
           </button>
         </form>
 
-        {/* Anti-Fraud Terms of Service Disclosure */}
+        {/* Security & Local Settlement Disclosure */}
         <div className="bg-[#0B0E14] border border-gray-800/80 rounded-2xl p-4 text-[11px] text-gray-500 space-y-2 leading-relaxed" id="payout_terms_box">
           <p className="font-bold text-gray-400 flex items-center gap-1 uppercase tracking-wider text-[10px]">
-            <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" /> Platform Payout Guard & Anti-Fraud Mandates
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Direct Local Bank Transfer Security
           </p>
           <p className="text-gray-500 italic text-[10.5px]">
-            &quot;To qualify for a withdrawal, the user must have at least one (1) active referral. A &apos;valid&apos; referral is defined as an individual who registers using the referrer&apos;s unique link AND successfully activates a paid subscription plan. Accounts created by the same individual or using automated scripts will be permanently banned. All earnings from fraudulent accounts will be forfeited. We utilize device fingerprinting and IP verification to maintain platform integrity.&quot;
+            All credited registration bonuses and task rewards are processed directly into your registered NUBAN local bank account. Transfers are queued and dispatched via automated clearing operations.
           </p>
         </div>
       </motion.div>
     </div>
   );
 }
+
