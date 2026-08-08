@@ -6,10 +6,13 @@ import { fireTierConfetti } from '../utils/confetti';
 interface CelebrationModalProps {
   isOpen: boolean;
   tier: 'basic' | 'premium' | 'gold' | string;
+  theme?: string;
   onClose: () => void;
 }
 
-export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationModalProps) {
+export default function CelebrationModal({ isOpen, tier, theme = 'dark', onClose }: CelebrationModalProps) {
+  const isLight = theme === 'light';
+
   useEffect(() => {
     if (isOpen) {
       fireTierConfetti(tier);
@@ -75,7 +78,7 @@ export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationM
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.8, opacity: 0, y: 20 }}
-          className={`relative w-full max-w-md bg-[#161B24] border ${details.borderColor} rounded-3xl p-6 shadow-2xl overflow-hidden text-white`}
+          className={`relative w-full max-w-md ${isLight ? 'bg-white text-slate-900 border-slate-200' : 'bg-[#161B24] text-white ' + details.borderColor} border rounded-3xl p-6 shadow-2xl overflow-hidden`}
           id="celebration_modal_box"
         >
           {/* Background Ambient Glow */}
@@ -84,7 +87,9 @@ export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationM
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-800 rounded-full transition-all"
+            className={`absolute top-4 right-4 p-2 rounded-full transition-all ${
+              isLight ? 'text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200' : 'text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-800'
+            }`}
             id="close_celebration_modal_btn"
           >
             <X className="w-4 h-4" />
@@ -98,20 +103,20 @@ export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationM
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
               className={`w-20 h-20 rounded-3xl ${details.badgeBg} p-0.5 shadow-xl flex items-center justify-center relative`}
             >
-              <div className="w-full h-full bg-[#0B0E14] rounded-[22px] flex items-center justify-center">
+              <div className={`w-full h-full ${isLight ? 'bg-slate-100' : 'bg-[#0B0E14]'} rounded-[22px] flex items-center justify-center`}>
                 <Trophy className={`w-10 h-10 ${details.textColor}`} />
               </div>
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                className="absolute -top-1 -right-1 text-yellow-300"
+                className="absolute -top-1 -right-1 text-yellow-500"
               >
                 <Sparkles className="w-5 h-5 fill-current" />
               </motion.div>
             </motion.div>
 
             <div>
-              <span className="text-[10px] font-mono tracking-widest uppercase text-gray-400 font-bold">
+              <span className={`text-[10px] font-mono tracking-widest uppercase font-bold ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                 Level Up Complete
               </span>
               <h2 className={`text-2xl font-black bg-gradient-to-r ${details.color} bg-clip-text text-transparent mt-1`}>
@@ -119,21 +124,21 @@ export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationM
               </h2>
             </div>
 
-            <p className="text-xs text-gray-300 font-light max-w-xs leading-relaxed">
+            <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-300'} font-light max-w-xs leading-relaxed`}>
               Congratulations! Your subscription has been upgraded to{' '}
               <span className={`font-bold ${details.textColor}`}>{details.name}</span>.
             </p>
           </div>
 
           {/* Unlocked Perks List */}
-          <div className="my-5 p-4 bg-[#0B0E14]/70 border border-gray-800/80 rounded-2xl space-y-2.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-300 uppercase tracking-wider">
+          <div className={`my-5 p-4 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#0B0E14]/70 border-gray-800/80 text-gray-300'} border rounded-2xl space-y-2.5`}>
+            <div className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
               <Zap className={`w-3.5 h-3.5 ${details.textColor}`} />
               <span>Unlocked Membership Features</span>
             </div>
             <ul className="space-y-2 text-xs">
               {details.perks.map((perk, idx) => (
-                <li key={idx} className="flex items-center gap-2 text-gray-300 font-medium">
+                <li key={idx} className={`flex items-center gap-2 font-medium ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
                   <div className={`p-0.5 rounded-full ${details.bgColor} ${details.textColor}`}>
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
@@ -147,10 +152,14 @@ export default function CelebrationModal({ isOpen, tier, onClose }: CelebrationM
           <div className="flex flex-col gap-2 pt-1">
             <button
               onClick={() => fireTierConfetti(tier)}
-              className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-gray-700"
+              className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                isLight 
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' 
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white border-gray-700'
+              }`}
               id="replay_confetti_btn"
             >
-              <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+              <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
               <span>Replay Confetti Burst</span>
             </button>
 

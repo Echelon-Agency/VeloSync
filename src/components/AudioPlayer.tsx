@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface AudioPlayerProps {
   user: any;
   onTaskCompleted: (newBalance: number, newCount: number) => void;
+  theme?: 'light' | 'dark';
 }
 
 interface Track {
@@ -20,7 +21,8 @@ const PRESET_TRACKS: Track[] = [
   { id: 'track_3', title: 'Hyperdrive Sync', artist: 'Deep Space Ambience', genre: 'Ambient' },
 ];
 
-export default function AudioPlayer({ user, onTaskCompleted }: AudioPlayerProps) {
+export default function AudioPlayer({ user, onTaskCompleted, theme = 'light' }: AudioPlayerProps) {
+  const isLight = theme === 'light';
   const [selectedTrack, setSelectedTrack] = useState<Track>(PRESET_TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // seconds elapsed
@@ -222,7 +224,7 @@ export default function AudioPlayer({ user, onTaskCompleted }: AudioPlayerProps)
   const strokeDashoffset = circumference - (progress / duration) * circumference;
 
   return (
-    <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl p-6 shadow-xl relative" id="audio_engine_panel">
+    <div className={`${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#1A1F29] border-gray-800 text-white'} border rounded-3xl p-6 shadow-xl relative`} id="audio_engine_panel">
       {/* Decorative pulse glow when active */}
       {isPlaying && (
         <div className="absolute inset-0 bg-[#8A2BE2]/5 rounded-3xl animate-pulse blur-xl pointer-events-none"></div>
@@ -230,10 +232,10 @@ export default function AudioPlayer({ user, onTaskCompleted }: AudioPlayerProps)
 
       <div className="flex flex-col items-center space-y-6 relative z-10" id="audio_player_layout">
         {/* Header Title */}
-        <div className="text-center w-full pb-4 border-b border-gray-800/60 flex justify-between items-center">
+        <div className={`text-center w-full pb-4 border-b ${isLight ? 'border-slate-100' : 'border-gray-800/60'} flex justify-between items-center`}>
           <div className="flex items-center gap-2">
             <AudioLines className={`w-5 h-5 text-[#8A2BE2] ${isPlaying ? 'animate-bounce' : ''}`} />
-            <h3 className="font-bold text-lg text-white">Interactive Audio Engine</h3>
+            <h3 className={`font-bold text-lg ${isLight ? 'text-slate-900' : 'text-white'}`}>Interactive Audio Engine</h3>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Reviewer Speedup</label>

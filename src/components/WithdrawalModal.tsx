@@ -6,9 +6,11 @@ interface WithdrawalModalProps {
   user: any;
   onClose: () => void;
   onWithdrawalComplete: (newBalance: number) => void;
+  theme?: 'light' | 'dark';
 }
 
-export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }: WithdrawalModalProps) {
+export default function WithdrawalModal({ user, onClose, onWithdrawalComplete, theme = 'light' }: WithdrawalModalProps) {
+  const isLight = theme === 'light';
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -70,25 +72,29 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0B0E14]/90 flex items-center justify-center p-4 z-50 overflow-y-auto" id="withdraw_overlay">
+    <div className={`fixed inset-0 ${isLight ? 'bg-slate-900/40' : 'bg-[#0B0E14]/90'} backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto`} id="withdraw_overlay">
       <motion.div
-        className="bg-[#1A1F29] border border-gray-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-6 text-white"
+        className={`${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#1A1F29] border-gray-800 text-white'} border rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-6`}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 30 }}
         id="withdraw_modal_container"
       >
         {/* Header */}
-        <div className="flex justify-between items-start pb-4 border-b border-gray-800">
+        <div className={`flex justify-between items-start pb-4 border-b ${isLight ? 'border-slate-100' : 'border-gray-800'}`}>
           <div className="space-y-1">
-            <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h3 className={`text-2xl font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               ₦ Bank Withdrawal Portal
             </h3>
-            <p className="text-xs text-gray-400">Direct Local Bank Settlement Gateway</p>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Direct Local Bank Settlement Gateway</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-white p-1 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors"
+            className={`p-1.5 rounded-lg border transition-colors ${
+              isLight 
+                ? 'text-slate-400 hover:text-slate-700 border-slate-200 hover:border-slate-300 bg-slate-50' 
+                : 'text-gray-500 hover:text-white border-gray-800 hover:border-gray-700'
+            }`}
             id="close_withdraw_modal_btn"
           >
             ✕
@@ -96,29 +102,35 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
         </div>
 
         {/* Welcome Registration Bonus & Wallet Status Card */}
-        <div className="bg-gradient-to-r from-emerald-950/40 via-purple-950/30 to-[#0B0E14] border border-emerald-500/30 p-4 rounded-2xl flex items-start gap-3 shadow-lg" id="welcome_bonus_status_box">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl shrink-0">
+        <div className={`${
+          isLight 
+            ? 'bg-gradient-to-r from-emerald-50 via-purple-50 to-slate-50 border-emerald-200' 
+            : 'bg-gradient-to-r from-emerald-950/40 via-purple-950/30 to-[#0B0E14] border-emerald-500/30'
+        } border p-4 rounded-2xl flex items-start gap-3 shadow-sm`} id="welcome_bonus_status_box">
+          <div className={`p-2.5 rounded-xl shrink-0 border ${
+            isLight ? 'bg-emerald-100 border-emerald-300 text-emerald-700' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          }`}>
             <Gift className="w-5 h-5" />
           </div>
           <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-300">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+            <div className={`flex items-center gap-1.5 font-bold ${isLight ? 'text-emerald-800' : 'text-emerald-300'}`}>
+              <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
               <span>Welcome Registration Bonus Unlocked</span>
             </div>
-            <p className="text-gray-300 font-light leading-relaxed">
-              Your credited <span className="font-bold text-white">₦500.00 Registration Bonus</span> and total wallet balance (<span className="font-bold text-emerald-300">₦{user.balance.toLocaleString()}</span>) are fully eligible for local bank settlement.
+            <p className={`${isLight ? 'text-slate-600' : 'text-gray-300'} font-light leading-relaxed`}>
+              Your credited <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>₦500.00 Registration Bonus</span> and total wallet balance (<span className={`font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>₦{user.balance.toLocaleString()}</span>) are fully eligible for local bank settlement.
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-950/40 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl text-xs" id="withdraw_error">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs" id="withdraw_error">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 px-4 py-3 rounded-xl text-xs" id="withdraw_success">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-xs" id="withdraw_success">
             {success}
           </div>
         )}
@@ -127,29 +139,33 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
         <form onSubmit={handleWithdrawalSubmit} className="space-y-4" id="withdraw_form">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" htmlFor="withdraw_bank_input">
+              <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-600' : 'text-gray-400'}`} htmlFor="withdraw_bank_input">
                 Local Bank Name
               </label>
               <div className="relative">
-                <Landmark className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Landmark className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-gray-500'}`} />
                 <input
                   id="withdraw_bank_input"
                   type="text"
                   placeholder="e.g. Fairmoney, GTBank"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-[#0B0E14] border border-gray-800 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[#8A2BE2] text-sm"
+                  className={`w-full pl-10 pr-3 py-3 rounded-xl border text-sm focus:outline-none focus:border-[#8A2BE2] ${
+                    isLight 
+                      ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400' 
+                      : 'bg-[#0B0E14] border-gray-800 text-gray-200 placeholder-gray-600'
+                  }`}
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" htmlFor="withdraw_account_number_input">
+              <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-600' : 'text-gray-400'}`} htmlFor="withdraw_account_number_input">
                 Account Number
               </label>
               <div className="relative">
-                <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <CreditCard className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-gray-500'}`} />
                 <input
                   id="withdraw_account_number_input"
                   type="text"
@@ -157,7 +173,11 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
                   maxLength={10}
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  className="w-full pl-10 pr-3 py-3 bg-[#0B0E14] border border-gray-800 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[#8A2BE2] font-mono text-sm"
+                  className={`w-full pl-10 pr-3 py-3 rounded-xl border font-mono text-sm focus:outline-none focus:border-[#8A2BE2] ${
+                    isLight 
+                      ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400' 
+                      : 'bg-[#0B0E14] border-gray-800 text-gray-200 placeholder-gray-600'
+                  }`}
                   required
                 />
               </div>
@@ -165,18 +185,22 @@ export default function WithdrawalModal({ user, onClose, onWithdrawalComplete }:
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" htmlFor="withdraw_account_name_input">
+            <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-600' : 'text-gray-400'}`} htmlFor="withdraw_account_name_input">
               Account Holder Name
             </label>
             <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-gray-500'}`} />
               <input
                 id="withdraw_account_name_input"
                 type="text"
                 placeholder="Name registered with bank"
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-[#0B0E14] border border-gray-800 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[#8A2BE2] text-sm"
+                className={`w-full pl-10 pr-3 py-3 rounded-xl border text-sm focus:outline-none focus:border-[#8A2BE2] ${
+                  isLight 
+                    ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400' 
+                    : 'bg-[#0B0E14] border-gray-800 text-gray-200 placeholder-gray-600'
+                }`}
                 required
               />
             </div>

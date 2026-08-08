@@ -5,6 +5,7 @@ import { fireTierConfetti } from '../utils/confetti';
 
 interface AdminPanelProps {
   onStatusResolved: () => void;
+  theme?: 'light' | 'dark';
 }
 
 interface PaymentVerification {
@@ -18,7 +19,8 @@ interface PaymentVerification {
   createdAt: number;
 }
 
-export default function AdminPanel({ onStatusResolved }: AdminPanelProps) {
+export default function AdminPanel({ onStatusResolved, theme = 'light' }: AdminPanelProps) {
+  const isLight = theme === 'light';
   const [verifications, setVerifications] = useState<PaymentVerification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,14 +71,14 @@ export default function AdminPanel({ onStatusResolved }: AdminPanelProps) {
   };
 
   return (
-    <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl p-6 shadow-xl space-y-6" id="admin_control_panel">
+    <div className={`${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#1A1F29] border-gray-800 text-white'} border rounded-3xl p-6 shadow-xl space-y-6`} id="admin_control_panel">
       {/* Header */}
-      <div className="flex justify-between items-center pb-4 border-b border-gray-800/60" id="admin_panel_header">
+      <div className={`flex justify-between items-center pb-4 border-b ${isLight ? 'border-slate-100' : 'border-gray-800/60'}`} id="admin_panel_header">
         <div className="space-y-1">
-          <h3 className="font-bold text-lg text-white flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-purple-400" /> VeloSync Manual Operations Desk
+          <h3 className={`font-bold text-lg flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <ShieldAlert className="w-5 h-5 text-purple-500" /> VeloSync Manual Operations Desk
           </h3>
-          <p className="text-xs text-gray-400">Review transfer reference codes & approve active subscription tiers</p>
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Review transfer reference codes & approve active subscription tiers</p>
         </div>
         <button
           onClick={fetchVerifications}

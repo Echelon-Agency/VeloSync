@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, ShieldCheck, LogOut, Coins, Lock, User, Copy, Check, 
   Clock, ArrowUpRight, Activity, Volume2, Award, Terminal, 
-  Unlock, HelpCircle, AlertCircle, RefreshCw, Calendar, UserCheck 
+  Unlock, HelpCircle, AlertCircle, RefreshCw, Calendar, UserCheck,
+  Sun, Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Onboarding from './components/Onboarding';
@@ -47,6 +48,31 @@ interface Referral {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('velosync_theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    localStorage.setItem('velosync_theme', nextTheme);
+  };
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      document.body.style.backgroundColor = '#F8FAFC';
+      document.body.style.color = '#0F172A';
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+      document.body.style.backgroundColor = '#0B0E14';
+      document.body.style.color = '#F3F4F6';
+    }
+  }, [theme]);
+
   const [user, setUser] = useState<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -283,9 +309,10 @@ export default function App() {
   };
 
   if (!user) {
-    return <Onboarding onLoginSuccess={handleLoginSuccess} />;
+    return <Onboarding onLoginSuccess={handleLoginSuccess} theme={theme} onToggleTheme={toggleTheme} />;
   }
 
+  const isLight = theme === 'light';
   const taskLimit = getTierLimit(user.tier) + (user.extraTasksToday || 0);
   const tasksRemaining = Math.max(0, taskLimit - user.dailyTaskCount);
 
@@ -303,46 +330,74 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] text-gray-100 pb-16 font-sans relative" id="velosync_dashboard_root">
+    <div className={`min-h-screen ${isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#0B0E14] text-gray-100'} pb-16 font-sans relative transition-colors duration-300`} id="velosync_dashboard_root">
       {/* Visual Ambient Elements */}
-      <div className="absolute top-0 right-[15%] w-[45%] h-[350px] bg-[#8A2BE2]/5 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className={`absolute top-0 right-[15%] w-[45%] h-[350px] ${isLight ? 'bg-purple-300/20' : 'bg-[#8A2BE2]/5'} rounded-full blur-[140px] pointer-events-none`}></div>
 
       {/* Main Container */}
       <div className="max-w-4xl mx-auto px-4 pt-6 space-y-6">
         
-        {/* Header Navigation Area (Single view - no multi-screen sidebar) */}
-        <header className="flex items-center justify-between bg-[#1A1F29]/60 border border-gray-800/80 rounded-2xl px-6 py-4 backdrop-blur-md" id="dashboard_header">
+        {/* Header Navigation Area */}
+        <header className={`flex items-center justify-between ${isLight ? 'bg-white/90 border-slate-200/80 shadow-sm text-slate-900' : 'bg-[#1A1F29]/60 border-gray-800/80 text-white'} border rounded-2xl px-6 py-4 backdrop-blur-md transition-colors`} id="dashboard_header">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-tr from-[#8A2BE2] to-purple-500 rounded-xl shadow-md">
               <Sparkles className="w-5 h-5 text-white animate-pulse" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold tracking-wider text-white">VeloSync</h2>
-              <p className="text-[10px] text-purple-400 font-mono tracking-widest uppercase">Admin Active Status</p>
+              <h2 className={`text-xl font-extrabold tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>VeloSync</h2>
+              <p className="text-[10px] text-purple-500 font-mono tracking-widest uppercase">Admin Active Status</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Light / Dark Mode Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all ${
+                isLight 
+                  ? 'bg-slate-100 border-slate-300 text-amber-600 hover:bg-slate-200' 
+                  : 'bg-[#0B0E14]/40 border-gray-800 text-yellow-400 hover:border-gray-700 hover:text-yellow-300'
+              }`}
+              id="theme_toggle_btn"
+              title={isLight ? "Switch to Dark Mode" : "Switch to White Light Mode"}
+            >
+              {isLight ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span className="hidden sm:inline text-slate-700">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-purple-300 fill-purple-300" />
+                  <span className="hidden sm:inline text-gray-300">Dark</span>
+                </>
+              )}
+            </button>
+
             {/* Quick Admin Toggle Desk for testers */}
             <button
               onClick={() => setIsAdminMode(!isAdminMode)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all ${
                 isAdminMode 
-                  ? 'bg-purple-900/30 border-[#8A2BE2] text-purple-300' 
-                  : 'bg-[#0B0E14]/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
+                  ? (isLight ? 'bg-purple-100 border-[#8A2BE2] text-purple-800' : 'bg-purple-900/30 border-[#8A2BE2] text-purple-300')
+                  : (isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300' : 'bg-[#0B0E14]/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700')
               }`}
               id="admin_ops_toggle"
               title="Toggle administrative operations panel for payment verification approval"
             >
               <Terminal className="w-3.5 h-3.5" />
               <span>Admin Desk</span>
-              <span className={`w-1.5 h-1.5 rounded-full ${isAdminMode ? 'bg-[#8A2BE2] animate-ping' : 'bg-gray-600'}`}></span>
+              <span className={`w-1.5 h-1.5 rounded-full ${isAdminMode ? 'bg-[#8A2BE2] animate-ping' : (isLight ? 'bg-slate-400' : 'bg-gray-600')}`}></span>
             </button>
 
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="p-2 border border-gray-800 hover:border-red-500/20 hover:bg-red-950/15 text-gray-500 hover:text-red-400 rounded-xl transition-all"
+              className={`p-2 border rounded-xl transition-all ${
+                isLight 
+                  ? 'border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-400 hover:text-red-600' 
+                  : 'border-gray-800 hover:border-red-500/20 hover:bg-red-950/15 text-gray-500 hover:text-red-400'
+              }`}
               id="logout_btn"
               title="Sign Out"
             >
@@ -382,7 +437,7 @@ export default function App() {
 
         {/* 1. Subscription Pending Review Status Banner */}
         {user.tier === 'none' && (
-          <div className="bg-[#1A1F29] border border-yellow-500/20 rounded-3xl p-6 shadow-xl relative overflow-hidden" id="pending_tier_banner">
+          <div className={`${isLight ? 'bg-white border-amber-300 text-slate-800' : 'bg-[#1A1F29] border-yellow-500/20 text-white'} border rounded-3xl p-6 shadow-xl relative overflow-hidden`} id="pending_tier_banner">
             <div className="absolute top-0 right-0 p-4 shrink-0">
               <Clock className="w-16 h-16 text-yellow-500/10" />
             </div>
@@ -390,13 +445,13 @@ export default function App() {
               <span className="px-2.5 py-0.5 rounded-full bg-yellow-950 text-yellow-400 text-[10px] font-bold uppercase tracking-wider border border-yellow-500/20">
                 Awaiting Verification
               </span>
-              <h3 className="text-lg font-bold text-white">Manual Subscription Review is Pending</h3>
-              <p className="text-xs text-gray-400 font-light leading-relaxed">
-                We detected a logged transfer request under reference <span className="font-mono text-purple-300 font-bold">{pendingVerifications[0]?.transactionRef || 'N/A'}</span>. Your premium earning suite will instantly unlock as soon as operations manual verification is complete.
+              <h3 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Manual Subscription Review is Pending</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'} font-light leading-relaxed`}>
+                We detected a logged transfer request under reference <span className="font-mono text-purple-600 dark:text-purple-300 font-bold">{pendingVerifications[0]?.transactionRef || 'N/A'}</span>. Your premium earning suite will instantly unlock as soon as operations manual verification is complete.
               </p>
-              <div className="bg-[#0B0E14] p-3.5 rounded-xl border border-gray-800 text-[11px] space-y-1.5 text-gray-500 leading-relaxed font-light">
-                <p className="font-semibold text-gray-400">💡 Testing Guidelines for Reviewers:</p>
-                <p>Click the <span className="text-[#8A2BE2] font-semibold">Admin Desk</span> button in the header right now, then click <span className="text-emerald-400 font-semibold">Approve</span> to instantly activate your subscription plan and experience real task earnings!</p>
+              <div className={`${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#0B0E14] border-gray-800 text-gray-500'} p-3.5 rounded-xl border text-[11px] space-y-1.5 leading-relaxed font-light`}>
+                <p className={`font-semibold ${isLight ? 'text-slate-700' : 'text-gray-400'}`}>💡 Testing Guidelines for Reviewers:</p>
+                <p>Click the <span className="text-[#8A2BE2] font-semibold">Admin Desk</span> button in the header right now, then click <span className="text-emerald-500 font-semibold">Approve</span> to instantly activate your subscription plan and experience real task earnings!</p>
               </div>
             </div>
           </div>
@@ -406,31 +461,37 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6" id="dashboard_bento_grid">
           
           {/* Main Wallet Balance Card */}
-          <div className="md:col-span-2 bg-[#1A1F29] border border-gray-800/80 rounded-3xl p-6 flex flex-col justify-between shadow-xl relative overflow-hidden" id="wallet_balance_card">
+          <div className={`md:col-span-2 ${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800/80 text-white shadow-xl'} border rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden`} id="wallet_balance_card">
             {/* Visual shine inside wallet */}
             <div className="absolute top-[-50%] right-[-10%] w-[150px] h-[150px] bg-[#8A2BE2]/10 rounded-full blur-[40px] pointer-events-none"></div>
 
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs text-gray-400 uppercase tracking-widest font-light">Available Naira Balance</p>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-yellow-400" />
+                <p className={`text-xs uppercase tracking-widest font-light ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Available Naira Balance</p>
+                <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold flex items-center gap-1 ${
+                  isLight 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                    : 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
+                }`}>
+                  <Sparkles className="w-3 h-3 text-yellow-500" />
                   <span>Welcome Registration Bonus Credited & Withdrawable</span>
                 </span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-purple-200 tracking-tight font-mono">
+                <span className={`text-4xl md:text-5xl font-black tracking-tight font-mono ${
+                  isLight ? 'text-slate-900' : 'text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-purple-200'
+                }`}>
                   ₦{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs font-semibold text-[#8A2BE2] uppercase font-mono">NGN</span>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-6 mt-4 border-t border-gray-800/60">
+            <div className={`flex flex-wrap items-center justify-between gap-4 pt-6 mt-4 border-t ${isLight ? 'border-slate-100' : 'border-gray-800/60'}`}>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#8A2BE2]" />
-                <span className="text-xs text-gray-400 font-light">
-                  Status: <span className="font-bold text-white uppercase text-[10px]">{user.tierActivated ? `${user.tier} active` : 'unactivated'}</span>
+                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'} font-light`}>
+                  Status: <span className={`font-bold uppercase text-[10px] ${isLight ? 'text-slate-900' : 'text-white'}`}>{user.tierActivated ? `${user.tier} active` : 'unactivated'}</span>
                 </span>
                 
                 {user.tierActivated && (
@@ -441,11 +502,11 @@ export default function App() {
                       setShowCelebrationModal(true);
                       fireTierConfetti(activeTier);
                     }}
-                    className="ml-1 px-2 py-0.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className="ml-1 px-2 py-0.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
                     id="trigger_celebration_btn"
                     title="Play Celebratory Tier Upgrade Particle Effect"
                   >
-                    <Sparkles className="w-3 h-3 text-yellow-400" />
+                    <Sparkles className="w-3 h-3 text-yellow-500" />
                     <span>Celebrate Tier</span>
                   </button>
                 )}
@@ -462,11 +523,11 @@ export default function App() {
           </div>
 
           {/* Daily Login Reward Card */}
-          <div className="bg-[#1A1F29] border border-gray-800/80 rounded-3xl p-6 flex flex-col justify-between shadow-xl" id="daily_bonus_card">
+          <div className={`${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800/80 text-white shadow-xl'} border rounded-3xl p-6 flex flex-col justify-between`} id="daily_bonus_card">
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-widest font-light mb-1">Daily Login Bonus</p>
-              <h4 className="text-xl font-bold text-white">₦100.00</h4>
-              <p className="text-[11px] text-gray-500 font-light mt-1">Claim 100 NGN daily login reward every 24 hours.</p>
+              <p className={`text-xs uppercase tracking-widest font-light mb-1 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Daily Login Bonus</p>
+              <h4 className={`text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>₦100.00</h4>
+              <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-500'} font-light mt-1`}>Claim 100 NGN daily login reward every 24 hours.</p>
             </div>
 
             <div className="pt-4">
@@ -489,7 +550,11 @@ export default function App() {
               ) : (
                 <button
                   disabled
-                  className="w-full py-2.5 bg-gray-800 border border-gray-700/60 text-gray-500 text-xs font-mono font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed"
+                  className={`w-full py-2.5 rounded-xl border flex items-center justify-center gap-1.5 cursor-not-allowed font-mono text-xs font-bold ${
+                    isLight 
+                      ? 'bg-slate-100 border-slate-200 text-slate-400' 
+                      : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                  }`}
                   id="claim_bonus_btn_disabled"
                 >
                   <Clock className="w-3.5 h-3.5" />
@@ -501,7 +566,7 @@ export default function App() {
         </div>
 
         {/* 3. "Listen Now" CTA expander & Audio Engine */}
-        <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl overflow-hidden shadow-xl" id="audio_task_parent">
+        <div className={`${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800 text-white shadow-xl'} border rounded-3xl overflow-hidden`} id="audio_task_parent">
           {!isAudioPlayerExpanded ? (
             <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6" id="audio_teaser_box">
               <div className="space-y-2">
@@ -509,17 +574,17 @@ export default function App() {
                   <span className="p-1 bg-[#8A2BE2]/15 text-[#8A2BE2] rounded-lg">
                     <Volume2 className="w-4 h-4 animate-bounce" />
                   </span>
-                  <h3 className="font-bold text-base text-white">Focused Stream Earnings</h3>
+                  <h3 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Focused Stream Earnings</h3>
                 </div>
-                <p className="text-xs text-gray-400 font-light leading-relaxed max-w-xl">
-                  Earn <span className="text-[#8A2BE2] font-semibold">200 NGN per audio stream</span>. Under our platform limits, your selected <span className="text-purple-300 font-bold uppercase">{user.tier}</span> tier authorizes <span className="font-bold text-white">{user.dailyTaskCount}/{taskLimit} streams</span> completed today.
+                <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'} font-light leading-relaxed max-w-xl`}>
+                  Earn <span className="text-[#8A2BE2] font-semibold">200 NGN per audio stream</span>. Under our platform limits, your selected <span className="text-purple-600 dark:text-purple-300 font-bold uppercase">{user.tier}</span> tier authorizes <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{user.dailyTaskCount}/{taskLimit} streams</span> completed today.
                 </p>
               </div>
 
               <div className="flex items-center gap-4 shrink-0">
                 <div className="text-right hidden md:block">
-                  <p className="text-xs text-gray-500 font-light">Tally Today</p>
-                  <p className="text-sm font-bold text-white font-mono">{user.dailyTaskCount} / {taskLimit} streams</p>
+                  <p className={`text-xs ${isLight ? 'text-slate-400' : 'text-gray-500'} font-light`}>Tally Today</p>
+                  <p className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>{user.dailyTaskCount} / {taskLimit} streams</p>
                 </div>
                 <button
                   onClick={() => setIsAudioPlayerExpanded(true)}
@@ -531,18 +596,19 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div className="p-1 bg-gradient-to-b from-gray-800/20 to-transparent rounded-3xl" id="audio_player_active_wrap">
+            <div className="p-1 bg-gradient-to-b from-purple-500/10 to-transparent rounded-3xl" id="audio_player_active_wrap">
               <AudioPlayer 
                 user={user} 
+                theme={theme}
                 onTaskCompleted={(newBal, newCount) => {
                   setUser(prev => prev ? { ...prev, balance: newBal, dailyTaskCount: newCount } : null);
                   fetchTransactions(user.id);
                 }} 
               />
-              <div className="p-3 text-center border-t border-gray-800/40">
+              <div className={`p-3 text-center border-t ${isLight ? 'border-slate-100' : 'border-gray-800/40'}`}>
                 <button 
                   onClick={() => setIsAudioPlayerExpanded(false)}
-                  className="text-[11px] text-gray-500 hover:text-white uppercase font-bold tracking-wider"
+                  className={`text-[11px] font-bold tracking-wider uppercase ${isLight ? 'text-slate-500 hover:text-slate-900' : 'text-gray-500 hover:text-white'}`}
                   id="collapse_audio_player_btn"
                 >
                   Collapse Player
@@ -553,7 +619,7 @@ export default function App() {
         </div>
 
         {/* Weekly Spin to Win Interactive Card */}
-        <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl p-6 shadow-xl relative overflow-hidden" id="spin_to_win_parent">
+        <div className={`${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800 text-white shadow-xl'} border rounded-3xl p-6 relative overflow-hidden`} id="spin_to_win_parent">
           {/* Visual glow element */}
           <div className="absolute top-[-40%] left-[-10%] w-[120px] h-[120px] bg-purple-500/10 rounded-full blur-[30px] pointer-events-none"></div>
 
@@ -564,33 +630,33 @@ export default function App() {
                 <span className="p-1 bg-[#8A2BE2]/15 text-[#8A2BE2] rounded-lg">
                   <Sparkles className="w-4 h-4" />
                 </span>
-                <h3 className="font-bold text-base text-white">Velo-Spin Weekly Wheel</h3>
+                <h3 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Velo-Spin Weekly Wheel</h3>
               </div>
               
-              <p className="text-xs text-gray-400 font-light leading-relaxed">
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'} font-light leading-relaxed`}>
                 Maximize your daily earnings! Spin our loyalty wheel once a week to win premium bonuses:
               </p>
 
               <div className="grid grid-cols-3 gap-2.5 text-center text-[10px] font-mono">
-                <div className="bg-[#0B0E14]/50 border border-purple-500/10 p-2 rounded-xl">
+                <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/50 border-purple-500/10'} border p-2 rounded-xl`}>
                   <span className="block text-[#8A2BE2] font-black">1 EXTRA TASK</span>
-                  <span className="text-gray-500 font-light">Daily limit expansion</span>
+                  <span className={`${isLight ? 'text-slate-500' : 'text-gray-500'} font-light`}>Daily limit expansion</span>
                 </div>
-                <div className="bg-[#0B0E14]/50 border border-cyan-500/10 p-2 rounded-xl">
-                  <span className="block text-cyan-400 font-black">₦100.00 CASH</span>
-                  <span className="text-gray-500 font-light">Direct wallet credit</span>
+                <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/50 border-cyan-500/10'} border p-2 rounded-xl`}>
+                  <span className="block text-cyan-600 dark:text-cyan-400 font-black">₦100.00 CASH</span>
+                  <span className={`${isLight ? 'text-slate-500' : 'text-gray-500'} font-light`}>Direct wallet credit</span>
                 </div>
-                <div className="bg-[#0B0E14]/50 border border-gray-800 p-2 rounded-xl">
-                  <span className="block text-gray-400 font-black">TRY AGAIN</span>
-                  <span className="text-gray-500 font-light">Maybe next week</span>
+                <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/50 border-gray-800'} border p-2 rounded-xl`}>
+                  <span className={`block font-black ${isLight ? 'text-slate-700' : 'text-gray-400'}`}>TRY AGAIN</span>
+                  <span className={`${isLight ? 'text-slate-500' : 'text-gray-500'} font-light`}>Maybe next week</span>
                 </div>
               </div>
 
               {/* Cooldown Info */}
-              <div className="bg-[#0B0E14] p-3.5 rounded-xl border border-gray-800 flex flex-col gap-1">
+              <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14] border-gray-800'} p-3.5 rounded-xl border flex flex-col gap-1`}>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400 font-light">Spin Cooldown:</span>
-                  <span className="font-bold font-mono text-purple-300">
+                  <span className={`${isLight ? 'text-slate-500' : 'text-gray-400'} font-light`}>Spin Cooldown:</span>
+                  <span className="font-bold font-mono text-purple-600 dark:text-purple-300">
                     {(() => {
                       if (!user.lastSpinTime) return 'READY TO SPIN';
                       const weekInMs = 7 * 24 * 60 * 60 * 1000;
@@ -605,15 +671,15 @@ export default function App() {
                 </div>
                 
                 {/* Developer bypass checkbox */}
-                <div className="flex items-center gap-2 pt-2 mt-1 border-t border-gray-800/40">
+                <div className={`flex items-center gap-2 pt-2 mt-1 border-t ${isLight ? 'border-slate-200' : 'border-gray-800/40'}`}>
                   <input
                     type="checkbox"
                     id="dev_bypass_spin"
                     checked={devBypassSpin}
                     onChange={(e) => setDevBypassSpin(e.target.checked)}
-                    className="rounded border-gray-700 bg-gray-900 text-[#8A2BE2] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                    className="rounded border-gray-300 text-[#8A2BE2] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
                   />
-                  <label htmlFor="dev_bypass_spin" className="text-[10px] text-gray-500 font-mono cursor-pointer select-none">
+                  <label htmlFor="dev_bypass_spin" className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-gray-500'} font-mono cursor-pointer select-none`}>
                     Dev Mode (Bypass 7-day Cooldown)
                   </label>
                 </div>
@@ -628,7 +694,7 @@ export default function App() {
                 
                 {/* Spinning Disc */}
                 <div 
-                  className="w-40 h-40 rounded-full border-4 border-[#0B0E14] shadow-2xl relative overflow-hidden flex items-center justify-center"
+                  className={`w-40 h-40 rounded-full border-4 ${isLight ? 'border-white' : 'border-[#0B0E14]'} shadow-2xl relative overflow-hidden flex items-center justify-center`}
                   style={{
                     transform: `rotate(${wheelRotation}deg)`,
                     transition: isSpinning ? 'transform 4s cubic-bezier(0.15, 0.85, 0.35, 1)' : 'none',
@@ -662,7 +728,7 @@ export default function App() {
                 </div>
 
                 {/* Center pin button */}
-                <div className="absolute w-10 h-10 bg-white rounded-full border-4 border-[#0B0E14] shadow-lg flex items-center justify-center z-10">
+                <div className={`absolute w-10 h-10 bg-white rounded-full border-4 ${isLight ? 'border-slate-200' : 'border-[#0B0E14]'} shadow-lg flex items-center justify-center z-10`}>
                   <div className="w-3.5 h-3.5 bg-[#8A2BE2] rounded-full"></div>
                 </div>
 
@@ -681,7 +747,7 @@ export default function App() {
                     <button
                       onClick={handleSpinWheel}
                       disabled={isSpinning || spinLoading || isCooldownActive}
-                      className="w-full py-2.5 bg-gradient-to-r from-[#8A2BE2] to-purple-600 hover:from-[#7b24cc] hover:to-purple-700 disabled:from-gray-800 disabled:to-gray-800/80 text-white disabled:text-gray-500 text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
+                      className="w-full py-2.5 bg-gradient-to-r from-[#8A2BE2] to-purple-600 hover:from-[#7b24cc] hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 text-white disabled:text-gray-500 text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
                       id="spin_the_wheel_btn"
                     >
                       {spinLoading ? (
@@ -703,7 +769,7 @@ export default function App() {
 
               {/* Spin Result Message Overlay */}
               {spinResultMsg && !isSpinning && (
-                <p className="text-center text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300 animate-bounce" id="spin_result_status_msg">
+                <p className="text-center text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500 animate-bounce" id="spin_result_status_msg">
                   {spinResultMsg}
                 </p>
               )}
@@ -721,7 +787,7 @@ export default function App() {
               className="overflow-hidden"
               id="admin_ops_box"
             >
-              <AdminPanel onStatusResolved={() => fetchUserProfile(user.id)} />
+              <AdminPanel onStatusResolved={() => fetchUserProfile(user.id)} theme={theme} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -730,29 +796,29 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="lower_dashboard_grid">
           
           {/* Referral Suite */}
-          <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4" id="referrals_card">
+          <div className={`${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800 text-white shadow-xl'} border rounded-3xl p-6 flex flex-col justify-between space-y-4`} id="referrals_card">
             <div className="space-y-2">
-              <h3 className="font-bold text-base text-white flex items-center gap-1.5">
+              <h3 className={`font-bold text-base flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Award className="w-4 h-4 text-[#8A2BE2]" /> Referral Earning Hub
               </h3>
-              <p className="text-xs text-gray-400 font-light leading-relaxed">
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'} font-light leading-relaxed`}>
                 Invite friends and expand your active circle. To enable monthly withdrawals, you must possess at least <span className="text-[#8A2BE2] font-semibold">1 Valid Referral</span> with an active paid plan.
               </p>
             </div>
 
             {/* Link Copy Field */}
-            <div className="bg-[#0B0E14] border border-gray-800 rounded-xl p-3 flex items-center justify-between gap-2" id="referral_link_bar">
-              <div className="truncate text-xs font-mono text-purple-300">
+            <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14] border-gray-800'} border rounded-xl p-3 flex items-center justify-between gap-2`} id="referral_link_bar">
+              <div className="truncate text-xs font-mono text-purple-600 dark:text-purple-300 font-semibold">
                 {user.referralCode}
               </div>
               <button
                 onClick={handleCopyReferral}
-                className="px-3 py-1.5 bg-[#8A2BE2]/10 border border-[#8A2BE2]/30 hover:bg-[#8A2BE2]/20 text-white rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 shrink-0"
+                className="px-3 py-1.5 bg-[#8A2BE2]/10 border border-[#8A2BE2]/30 hover:bg-[#8A2BE2]/20 text-[#8A2BE2] dark:text-white rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 shrink-0"
                 id="copy_referral_link_btn"
               >
                 {copiedCode ? (
                   <>
-                    <Check className="w-3 h-3 text-emerald-400" />
+                    <Check className="w-3 h-3 text-emerald-500" />
                     <span>Copied Code</span>
                   </>
                 ) : (
@@ -766,24 +832,24 @@ export default function App() {
 
             {/* Referrals Stats Grid */}
             <div className="grid grid-cols-2 gap-4 pt-1" id="referrals_stats_bar">
-              <div className="bg-[#0B0E14]/40 border border-gray-800/60 p-3 rounded-xl text-center">
-                <p className="text-[10px] text-gray-500 uppercase">Total Referrals</p>
-                <p className="text-lg font-bold text-white font-mono">{user.totalReferralsCount || 0}</p>
+              <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/40 border-gray-800/60'} border p-3 rounded-xl text-center`}>
+                <p className={`text-[10px] uppercase ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>Total Referrals</p>
+                <p className={`text-lg font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>{user.totalReferralsCount || 0}</p>
               </div>
-              <div className="bg-[#0B0E14]/40 border border-gray-800/60 p-3 rounded-xl text-center">
-                <p className="text-[10px] text-gray-500 uppercase">Valid Referrals</p>
-                <p className="text-lg font-bold text-emerald-400 font-mono">{user.validReferralsCount || 0}</p>
+              <div className={`${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/40 border-gray-800/60'} border p-3 rounded-xl text-center`}>
+                <p className={`text-[10px] uppercase ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>Valid Referrals</p>
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">{user.validReferralsCount || 0}</p>
               </div>
             </div>
 
             {/* Detailed Referral Validation & History Log */}
             {referrals.length > 0 ? (
-              <div className="space-y-3 pt-3 border-t border-gray-800/60" id="referred_users_box">
+              <div className={`space-y-3 pt-3 border-t ${isLight ? 'border-slate-100' : 'border-gray-800/60'}`} id="referred_users_box">
                 <div className="flex justify-between items-center">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-purple-400" /> Referral Validation History
+                  <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-gray-400'} font-bold uppercase tracking-wider flex items-center gap-1`}>
+                    <Calendar className="w-3.5 h-3.5 text-purple-500" /> Referral Validation History
                   </p>
-                  <span className="text-[9px] bg-[#8A2BE2]/10 text-purple-300 px-2 py-0.5 rounded-full font-mono">
+                  <span className="text-[9px] bg-[#8A2BE2]/10 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full font-mono">
                     {referrals.filter(r => r.tierActivated).length} of {referrals.length} Valid
                   </span>
                 </div>
@@ -810,30 +876,30 @@ export default function App() {
                         key={idx} 
                         className={`p-3 rounded-xl border transition-all ${
                           ref.tierActivated 
-                            ? 'bg-emerald-950/10 border-emerald-500/20' 
-                            : 'bg-[#0B0E14]/40 border-gray-800/80'
+                            ? (isLight ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-950/10 border-emerald-500/20')
+                            : (isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/40 border-gray-800/80')
                         }`}
                         id={`referral_item_${ref.username}`}
                       >
                         <div className="flex justify-between items-start mb-1.5">
                           <div className="flex items-center gap-1.5">
-                            <UserCheck className={`w-3.5 h-3.5 ${ref.tierActivated ? 'text-emerald-400' : 'text-gray-500'}`} />
-                            <span className="font-semibold text-gray-200">@{ref.username}</span>
+                            <UserCheck className={`w-3.5 h-3.5 ${ref.tierActivated ? 'text-emerald-500' : 'text-gray-400'}`} />
+                            <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-gray-200'}`}>@{ref.username}</span>
                           </div>
                           
                           <div className="flex items-center gap-1.5">
                             {ref.tier !== 'none' && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-purple-950/40 text-purple-300 border border-purple-500/20 rounded uppercase font-mono">
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-300 dark:border-purple-500/20 rounded uppercase font-mono">
                                 {ref.tier}
                               </span>
                             )}
                             {ref.tierActivated ? (
-                              <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-0.5 animate-pulse" />
+                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-0.5 animate-pulse" />
                                 Valid
                               </span>
                             ) : (
-                              <span className="text-[10px] font-semibold text-yellow-500 flex items-center gap-0.5 bg-yellow-950/40 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                              <span className="text-[10px] font-semibold text-yellow-600 dark:text-yellow-500 flex items-center gap-0.5 bg-yellow-50 dark:bg-yellow-950/40 px-1.5 py-0.5 rounded border border-yellow-300 dark:border-yellow-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 mr-0.5" />
                                 Pending
                               </span>
@@ -842,19 +908,19 @@ export default function App() {
                         </div>
 
                         {/* Milestones Log */}
-                        <div className="space-y-1 font-mono text-[10px] text-gray-400 pl-5">
+                        <div className={`space-y-1 font-mono text-[10px] ${isLight ? 'text-slate-500' : 'text-gray-400'} pl-5`}>
                           <div className="flex justify-between">
                             <span className="font-light">Joined:</span>
-                            <span className="text-gray-300 font-medium">{formattedJoinDate}</span>
+                            <span className={`${isLight ? 'text-slate-700' : 'text-gray-300'} font-medium`}>{formattedJoinDate}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="font-light">Validated:</span>
                             {ref.tierActivated && formattedActivationDate ? (
-                              <span className="text-emerald-400 font-bold">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                                 {formattedActivationDate}
                               </span>
                             ) : (
-                              <span className="text-yellow-500 font-light flex items-center gap-1">
+                              <span className="text-yellow-600 dark:text-yellow-500 font-light flex items-center gap-1">
                                 <Clock className="w-2.5 h-2.5" /> Awaiting subscription plan
                               </span>
                             )}
@@ -862,9 +928,9 @@ export default function App() {
                         </div>
 
                         {/* Progress and Withdrawal Guidance helper text */}
-                        <div className="mt-2 pt-2 border-t border-gray-800/40 pl-5 text-[9px] text-gray-500 font-light">
+                        <div className={`mt-2 pt-2 border-t ${isLight ? 'border-slate-200' : 'border-gray-800/40'} pl-5 text-[9px] ${isLight ? 'text-slate-500' : 'text-gray-500'} font-light`}>
                           {ref.tierActivated ? (
-                            <span className="text-emerald-500 font-medium">✓ Qualifies as active referral for withdrawal limits</span>
+                            <span className="text-emerald-600 dark:text-emerald-500 font-medium">✓ Qualifies as active referral for withdrawal limits</span>
                           ) : (
                             <span>✗ Invite must pay & complete subscription verification to unlock withdrawal</span>
                           )}
@@ -875,39 +941,39 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-500 text-xs font-light border-t border-gray-800/40 pt-4" id="referred_users_empty">
+              <div className={`text-center py-6 ${isLight ? 'text-slate-400' : 'text-gray-500'} text-xs font-light border-t ${isLight ? 'border-slate-100' : 'border-gray-800/40'} pt-4`} id="referred_users_empty">
                 No invited members logged yet. Copy your code and invite friends!
               </div>
             )}
           </div>
 
           {/* Ledger History List */}
-          <div className="bg-[#1A1F29] border border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4" id="ledger_card">
+          <div className={`${isLight ? 'bg-white border-slate-200 text-slate-900 shadow-sm' : 'bg-[#1A1F29] border-gray-800 text-white shadow-xl'} border rounded-3xl p-6 flex flex-col justify-between space-y-4`} id="ledger_card">
             <div className="space-y-1">
-              <h3 className="font-bold text-base text-white flex items-center gap-1.5">
+              <h3 className={`font-bold text-base flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Activity className="w-4 h-4 text-[#8A2BE2]" /> Financial Transaction Ledger
               </h3>
-              <p className="text-xs text-gray-400 font-light">Real-time ledger audit history log</p>
+              <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'} font-light`}>Real-time ledger audit history log</p>
             </div>
 
             <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1" id="transactions_scroll_wrapper">
               {transactions.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 text-xs font-light">
+                <div className={`text-center py-12 ${isLight ? 'text-slate-400' : 'text-gray-500'} text-xs font-light`}>
                   No logged transactions recorded yet on your node.
                 </div>
               ) : (
                 transactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex justify-between items-center bg-[#0B0E14]/40 border border-gray-800/60 p-3 rounded-2xl"
+                    className={`flex justify-between items-center ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0B0E14]/40 border-gray-800/60'} border p-3 rounded-2xl`}
                     id={`tx_item_${tx.id}`}
                   >
                     <div className="space-y-0.5">
-                      <p className="text-xs font-semibold text-gray-200">{tx.description}</p>
-                      <p className="text-[10px] text-gray-500 font-light">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                      <p className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-gray-200'}`}>{tx.description}</p>
+                      <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-gray-500'} font-light`}>{new Date(tx.createdAt).toLocaleDateString()}</p>
                     </div>
                     <span className={`text-xs font-mono font-bold ${
-                      tx.amount > 0 ? 'text-emerald-400' : 'text-red-400'
+                      tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                     }`}>
                       {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()} NGN
                     </span>
@@ -925,6 +991,7 @@ export default function App() {
         {isWithdrawing && (
           <WithdrawalModal
             user={user}
+            theme={theme}
             onClose={() => setIsWithdrawing(false)}
             onWithdrawalComplete={(newBalance) => {
               setUser(prev => prev ? { ...prev, balance: newBalance } : null);
